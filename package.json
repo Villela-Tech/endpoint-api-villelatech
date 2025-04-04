@@ -7,7 +7,8 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "prod": "NODE_ENV=production node app.js",
-    "build": "echo 'Build step completed'"
+    "build": "echo 'Build step completed'",
+    "vercel-build": "echo 'Build step completed'"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -1,130 +1,235 @@
 # API de Gerenciamento de Arquivos JSON
 
-Esta é uma API simples para gerenciar arquivos JSON.
+API para gerenciamento de arquivos JSON com endpoints RESTful.
 
-## Instalação
-
-1. Instale as dependências:
-```bash
-npm install
+## URL Base
 ```
-
-2. Configure as variáveis de ambiente:
-- Copie o arquivo `.env.example` para `.env`
-- Ajuste as variáveis conforme necessário
-
-3. Inicie o servidor:
-```bash
-# Desenvolvimento
-npm run dev
-
-# Produção
-npm run prod
+http://157.90.117.119
 ```
-
-## Deploy na Heroku
-
-1. Instale o Heroku CLI:
-```bash
-# Windows (com chocolatey)
-choco install heroku-cli
-
-# macOS
-brew install heroku/brew/heroku
-
-# Linux
-curl https://cli-assets.heroku.com/install.sh | sh
-```
-
-2. Faça login na Heroku:
-```bash
-heroku login
-```
-
-3. Crie um novo app na Heroku:
-```bash
-heroku create seu-app-name
-```
-
-4. Configure as variáveis de ambiente na Heroku:
-```bash
-heroku config:set NODE_ENV=production
-heroku config:set RATE_LIMIT_WINDOW_MS=900000
-heroku config:set RATE_LIMIT_MAX_REQUESTS=100
-```
-
-5. Deploy para a Heroku:
-```bash
-git add .
-git commit -m "Preparando para deploy na Heroku"
-git push heroku main
-```
-
-6. Verifique os logs:
-```bash
-heroku logs --tail
-```
-
-## Configuração para Produção
-
-### Variáveis de Ambiente
-- `PORT`: Porta do servidor (padrão: 3000)
-- `NODE_ENV`: Ambiente (development/production)
-- `RATE_LIMIT_WINDOW_MS`: Janela de tempo para rate limiting (padrão: 900000ms = 15min)
-- `RATE_LIMIT_MAX_REQUESTS`: Número máximo de requisições por janela (padrão: 100)
-
-### Segurança
-- A API inclui proteções contra ataques comuns
-- Rate limiting para prevenir sobrecarga
-- Headers de segurança com Helmet
-- Compressão de resposta
-- CORS configurável por ambiente
-
-### Deploy
-1. Certifique-se de que todas as variáveis de ambiente estão configuradas
-2. Use um processo manager como PM2:
-```bash
-npm install -g pm2
-pm2 start app.js --name "json-api"
-```
-
-3. Configure um proxy reverso (nginx/apache) se necessário
-4. Configure SSL/TLS para HTTPS
 
 ## Endpoints
 
-### Listar todos os arquivos JSON
-- **GET** `/json`
-- Retorna uma lista com os nomes de todos os arquivos JSON disponíveis
+### 1. Listar Todos os Arquivos JSON
+Retorna uma lista com os nomes de todos os arquivos JSON disponíveis.
 
-### Obter um arquivo JSON
-- **GET** `/json/:filename`
-- Retorna o conteúdo do arquivo JSON especificado
+- **URL**: `/json`
+- **Método**: `GET`
+- **Resposta de Sucesso**:
+  ```json
+  ["arquivo1", "arquivo2", "arquivo3"]
+  ```
+- **Exemplo**:
+  ```bash
+  curl http://157.90.117.119/json
+  ```
 
-### Salvar um arquivo JSON
-- **POST** `/json/:filename`
-- Salva ou atualiza um arquivo JSON
-- O corpo da requisição deve ser um JSON válido
+### 2. Obter um Arquivo JSON
+Retorna o conteúdo de um arquivo JSON específico.
 
-### Deletar um arquivo JSON
-- **DELETE** `/json/:filename`
-- Remove o arquivo JSON especificado
+- **URL**: `/json/:filename`
+- **Método**: `GET`
+- **Parâmetros URL**:
+  - `filename`: Nome do arquivo (sem a extensão .json)
+- **Resposta de Sucesso**:
+  ```json
+  {
+    "chave": "valor",
+    "outraChave": "outroValor"
+  }
+  ```
+- **Resposta de Erro** (404):
+  ```json
+  {
+    "error": "Arquivo não encontrado"
+  }
+  ```
+- **Exemplo**:
+  ```bash
+  curl http://157.90.117.119/json/meu-arquivo
+  ```
 
-## Exemplos de Uso
+### 3. Salvar/Criar um Arquivo JSON
+Salva ou atualiza um arquivo JSON.
 
-### Salvar um arquivo JSON
+- **URL**: `/json/:filename`
+- **Método**: `POST`
+- **Parâmetros URL**:
+  - `filename`: Nome do arquivo (sem a extensão .json)
+- **Headers**:
+  - `Content-Type: application/json`
+- **Corpo da Requisição**:
+  ```json
+  {
+    "chave": "valor",
+    "outraChave": "outroValor"
+  }
+  ```
+- **Resposta de Sucesso** (201):
+  ```json
+  {
+    "message": "Arquivo JSON salvo com sucesso"
+  }
+  ```
+- **Exemplo**:
+  ```bash
+  curl -X POST http://157.90.117.119/json/meu-arquivo \
+    -H "Content-Type: application/json" \
+    -d '{"nome": "João", "idade": 30}'
+  ```
+
+### 4. Deletar um Arquivo JSON
+Remove um arquivo JSON específico.
+
+- **URL**: `/json/:filename`
+- **Método**: `DELETE`
+- **Parâmetros URL**:
+  - `filename`: Nome do arquivo (sem a extensão .json)
+- **Resposta de Sucesso**:
+  ```json
+  {
+    "message": "Arquivo JSON deletado com sucesso"
+  }
+  ```
+- **Resposta de Erro** (404):
+  ```json
+  {
+    "error": "Arquivo não encontrado"
+  }
+  ```
+- **Exemplo**:
+  ```bash
+  curl -X DELETE http://157.90.117.119/json/meu-arquivo
+  ```
+
+## Limitações e Segurança
+
+- **Rate Limiting**: 100 requisições a cada 15 minutos
+- **Tamanho Máximo**: 10MB por arquivo JSON
+- **Headers de Segurança**: Helmet configurado
+- **Compressão**: Respostas comprimidas
+- **CORS**: Configurado para produção
+
+## Exemplos de Uso para Desenvolvedores
+
+### Exemplo 1: Configurações do Sistema
 ```bash
-curl -X POST https://seu-app.herokuapp.com/json/exemplo \
+# Salvar configurações
+curl -X POST http://157.90.117.119/json/config \
   -H "Content-Type: application/json" \
-  -d '{"nome": "João", "idade": 30}'
+  -d '{
+    "sistema": {
+      "nome": "Sistema Principal",
+      "versao": "1.0.0",
+      "configuracoes": {
+        "tema": "escuro",
+        "idioma": "pt-BR",
+        "timezone": "America/Sao_Paulo"
+      }
+    }
+  }'
+
+# Recuperar configurações
+curl http://157.90.117.119/json/config
 ```
 
-### Obter um arquivo JSON
+### Exemplo 2: Dados de Usuários
 ```bash
-curl https://seu-app.herokuapp.com/json/exemplo
+# Salvar lista de usuários
+curl -X POST http://157.90.117.119/json/usuarios \
+  -H "Content-Type: application/json" \
+  -d '{
+    "usuarios": [
+      {
+        "id": 1,
+        "nome": "João Silva",
+        "email": "joao@empresa.com",
+        "departamento": "TI",
+        "permissoes": ["admin", "user"]
+      },
+      {
+        "id": 2,
+        "nome": "Maria Santos",
+        "email": "maria@empresa.com",
+        "departamento": "RH",
+        "permissoes": ["user"]
+      }
+    ]
+  }'
 ```
 
-### Deletar um arquivo JSON
+### Exemplo 3: Logs do Sistema
 ```bash
-curl -X DELETE https://seu-app.herokuapp.com/json/exemplo
-``` 
+# Salvar logs
+curl -X POST http://157.90.117.119/json/logs-sistema \
+  -H "Content-Type: application/json" \
+  -d '{
+    "logs": [
+      {
+        "timestamp": "2024-04-04T23:30:00Z",
+        "nivel": "INFO",
+        "mensagem": "Sistema iniciado",
+        "usuario": "sistema"
+      },
+      {
+        "timestamp": "2024-04-04T23:31:00Z",
+        "nivel": "ERROR",
+        "mensagem": "Falha na conexão",
+        "usuario": "admin"
+      }
+    ]
+  }'
+```
+
+## Troubleshooting
+
+### Problemas Comuns e Soluções
+
+1. **Erro 404 - Arquivo não encontrado**
+   - Verifique se o nome do arquivo está correto
+   - Confirme se o arquivo foi criado anteriormente
+   - Use o endpoint GET `/json` para listar arquivos existentes
+
+2. **Erro ao salvar arquivo**
+   - Verifique se o JSON está bem formatado
+   - Confirme se o Content-Type está correto
+   - Verifique se o tamanho do arquivo não excede 10MB
+
+3. **Rate Limiting**
+   - Limite: 100 requisições a cada 15 minutos
+   - Implemente cache no lado do cliente
+   - Use bulk operations quando possível
+
+4. **CORS Issues**
+   - A API está configurada para aceitar requisições de qualquer origem em desenvolvimento
+   - Em produção, configure o domínio correto no header Origin
+
+### Dicas para Desenvolvedores
+
+1. **Cache**
+   - Implemente cache no lado do cliente
+   - Use ETags para verificar se o conteúdo mudou
+   - Armazene dados frequentemente acessados localmente
+
+2. **Bulk Operations**
+   - Para múltiplas operações, considere criar um único arquivo JSON
+   - Use arrays para armazenar múltiplos itens
+   - Implemente paginação para grandes conjuntos de dados
+
+3. **Monitoramento**
+   - Verifique os logs do servidor para erros
+   - Monitore o uso do rate limiting
+   - Implemente retry logic para falhas temporárias
+
+## Códigos de Status
+
+- **200**: Sucesso
+- **201**: Criado com sucesso
+- **404**: Arquivo não encontrado
+- **500**: Erro interno do servidor
+
+## Observações
+
+- Os arquivos são armazenados no servidor
+- Não é necessário incluir a extensão .json no nome do arquivo
+- O corpo das requisições POST deve ser um JSON válido
+- As respostas são sempre em formato JSON 
